@@ -12,21 +12,21 @@ extension UIImage {
 }
 class ContactCell: UITableViewCell {
     
-    var link = ViewController()
+    weak var link: ViewController?
     let name = UILabel()
     let buttonFav = UIButton(type: .system)
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
+        contentView.isUserInteractionEnabled = true
         addSubview(name)
         addSubview(buttonFav)
         configure()
         setupConstraints()
-        buttonFav.addTarget(self, action: #selector(handleFavorite), for: .touchUpInside)
     }
     
     @objc private func handleFavorite() {
         print("handlefav")
-        link.someFunctionCall(cell: self)
+        link?.someFunctionCall(cell: self)
     }
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")

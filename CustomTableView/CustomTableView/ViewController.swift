@@ -13,7 +13,18 @@ class ViewController: UIViewController {
     var showIndexPaths = true
     var expandRows = true
     
-    
+    func someFunctionCall(cell :UITableViewCell) {
+        print("inViewController")
+        guard let indexTapped = tableView.indexPath(for: cell) else {
+            return
+        }
+        print(indexTapped)
+        let contact = twoDArray[indexTapped.section].names[indexTapped.row]
+        let hasFavorite = contact.isFavorite
+        twoDArray[indexTapped.section].names[indexTapped.row].isFavorite = !hasFavorite
+        tableView.reloadRows(at: [indexTapped], with: .fade)
+        
+    }
     var twoDArray = [
         ExpandableNames(names: [ContactName(name: "A"), ContactName(name: "AB"), ContactName(name: "ABC"), ContactName(name: "ABCD")]),
         ExpandableNames(names: [ContactName(name: "B"), ContactName(name: "BC"), ContactName(name: "BCD"), ContactName(name: "BCDE")]),
@@ -123,19 +134,6 @@ extension ViewController: UITableViewDelegate {
 extension ViewController: UITableViewDataSource {
     func numberOfSections(in tableView: UITableView) -> Int {
         return twoDArray.count;
-    }
-
-    func someFunctionCall(cell :UITableViewCell) {
-        print("inViewController")
-        guard let indexTapped = tableView.indexPath(for: cell) else {
-            return
-        }
-        print(indexTapped)
-        let contact = twoDArray[indexTapped.section].names[indexTapped.row]
-        let hasFavorite = contact.isFavorite
-        twoDArray[indexTapped.section].names[indexTapped.row].isFavorite = !hasFavorite
-        tableView.reloadRows(at: [indexTapped], with: .fade)
-        
     }
     
     @objc private func handleFavorite(for button: UIButton) {
