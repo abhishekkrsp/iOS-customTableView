@@ -12,65 +12,20 @@ class ViewController: UIViewController {
     let cellId = "cellId"
     var showIndexPaths = true
     var expandRows = true
-    
-    func someFunctionCall(cell :UITableViewCell) {
-        print("inViewController")
-        guard let indexTapped = tableView.indexPath(for: cell) else {
-            return
-        }
-        print(indexTapped)
-        let contact = twoDArray[indexTapped.section].names[indexTapped.row]
-        let hasFavorite = contact.isFavorite
-        twoDArray[indexTapped.section].names[indexTapped.row].isFavorite = !hasFavorite
-        tableView.reloadRows(at: [indexTapped], with: .fade)
-        
-    }
     var twoDArray = [
         ExpandableNames(names: [ContactName(name: "A"), ContactName(name: "AB"), ContactName(name: "ABC"), ContactName(name: "ABCD")]),
         ExpandableNames(names: [ContactName(name: "B"), ContactName(name: "BC"), ContactName(name: "BCD"), ContactName(name: "BCDE")]),
         ExpandableNames(names: [ContactName(name: "C"), ContactName(name: "CD"), ContactName(name: "CDE"), ContactName(name: "CDEF")])
     ]
     
-    override func loadView() {
-        super.loadView()
-        setupUI()
-        setupConstraints()
-        setupNav()
-    }
     
-    @objc func handleShowIndexPath() {
-        var indexPathToReload = [IndexPath]()
-        for section in twoDArray.indices {
-            for row in twoDArray[section].names.indices {
-                print(section, row)
-                let indexPath = IndexPath(row: row, section: section)
-                indexPathToReload.append(indexPath)
-            }
-        }
-        showIndexPaths = !showIndexPaths
-        let animationStyle = showIndexPaths ? UITableView.RowAnimation.right: UITableView.RowAnimation.left
-        
-        tableView.reloadRows(at: indexPathToReload, with: animationStyle)
-    }
-    func setupNav() {
-        navigationItem.title = "Contacts"
-        navigationController?
-            .navigationBar.prefersLargeTitles = true
-        
-        navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Hide/Show", style: .plain, target: self, action: #selector(handleShowIndexPath))
-    }
+    private let tableView: UITableView = {
+        let someTableView = UITableView()
+        someTableView.translatesAutoresizingMaskIntoConstraints = false
+        return someTableView
+    }()
     
-    func setupUI() {
-        view.addSubview(tableView)
-    }
-
-    func setupConstraints() {
-        
-        NSLayoutConstraint.activate([tableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 0),
-                                     tableView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: 0),
-                                     tableView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 0),
-                                     tableView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor,constant: 0)])
-    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -79,25 +34,55 @@ class ViewController: UIViewController {
         tableView.dataSource = self
     }
 
-    private let tableView: UITableView = {
-        let someTableView = UITableView()
-        someTableView.translatesAutoresizingMaskIntoConstraints = false
-        return someTableView
-    }()
+    override func loadView() {
+        super.loadView()
+        setupUI()
+        setupConstraints()
+        setupNav()
+    }
+    
+    func setupUI() {
+        view.addSubview(tableView)
+    }
+    
+    func setupNav() {
+        navigationItem.title = "Contacts"
+        navigationController?
+            .navigationBar.prefersLargeTitles = true
+        navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Hide/Show", style: .plain, target: self, action: #selector(handleShowIndexPath))
+    }
+    
+    func setupConstraints() {
+        
+        NSLayoutConstraint.activate([
+            tableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor,
+                                           constant: 0),
+            tableView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor,
+                                              constant: 0),
+            tableView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor,
+                                               constant: 0),
+            tableView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor,
+                                                constant: 0)])
+    }
+    
+    @objc func handleShowIndexPath() {
+        var indexPathToReload = [IndexPath]()
+        for section in twoDArray.indices {
+            for row in twoDArray[section].names.indices {
+                let indexPath = IndexPath(row: row, section: section)
+                indexPathToReload.append(indexPath)
+            }
+        }
+        showIndexPaths.toggle()
+        let animationStyle = showIndexPaths ? UITableView.RowAnimation.right: UITableView.RowAnimation.left
+        
+        tableView.reloadRows(at: indexPathToReload, with: animationStyle)
+    }
 }
 
 
 
 extension ViewController: UITableViewDelegate {
-
-    func go(to View: Int ) {
-        print("go to index \(View)")
-    }
-
-    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        go(to: indexPath.row)
-    }
-    
     
     @objc func handleExpandClose(for button: UIButton) {
         
@@ -149,11 +134,15 @@ extension ViewController: UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: cellId, for: indexPath) as! ContactCell
-        cell.link = self
+        cell.delegate = self
         let contact = twoDArray[indexPath.section].names[indexPath.row]
         cell.buttonFav.tintColor = contact.isFavorite ? .red : .lightGray
         if showIndexPaths {
-            cell.name.text = twoDArray[indexPath.section].names[indexPath.row].name
+            cell.name.text = contact.name
+            cell.buttonFav.isHidden = false
+        } else {
+            cell.name.text = nil
+            cell.buttonFav.isHidden = true
         }
         return cell
     }
@@ -165,3 +154,14 @@ extension ViewController: UITableViewDataSource {
 
 }
 
+extension ViewController: ContactCellDelegate {
+    func favorite(_ cell: ContactCell) {
+        guard let indexTapped = tableView.indexPath(for: cell) else {
+            return
+        }
+        let contact = twoDArray[indexTapped.section].names[indexTapped.row]
+        let hasFavorite = contact.isFavorite
+        twoDArray[indexTapped.section].names[indexTapped.row].isFavorite = !hasFavorite
+        tableView.reloadRows(at: [indexTapped], with: .fade)
+    }
+}
