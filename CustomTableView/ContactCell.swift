@@ -10,64 +10,60 @@ import UIKit
 extension UIImage {
     static let fav = UIImage(named: "fav_image")
 }
+
+protocol ContactCellDelegate {
+    func favorite(_ cell: ContactCell)
+}
+
 class ContactCell: UITableViewCell {
-    
-    weak var link: ViewController?
-    let name = UILabel()
-    let buttonFav = UIButton(type: .system)
+    var delegate: ContactCellDelegate?
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         contentView.isUserInteractionEnabled = true
-        addSubview(name)
-        addSubview(buttonFav)
-        configure()
+        setupUI()
         setupConstraints()
     }
     
     @objc private func handleFavorite() {
-        print("handlefav")
-        link?.someFunctionCall(cell: self)
+        if let delegate = delegate {
+            delegate.favorite(self)
+        }
     }
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     
-    func configure() {
-        configureName()
-        configureButtonFav()
+    func setupUI() {
+        contentView.addSubview(name)
+        contentView.addSubview(buttonFav)
     }
+    
+    let name: UILabel = {
+        let someLabel = UILabel()
+        someLabel.translatesAutoresizingMaskIntoConstraints = false
+        someLabel.adjustsFontSizeToFitWidth = true
+        someLabel.numberOfLines = 1
+        return someLabel;
+    }()
+    
+    let buttonFav: UIButton = {
+        let someButton = UIButton(type: .system)
+        someButton.translatesAutoresizingMaskIntoConstraints = false
+        someButton.setImage(UIImage.fav, for: .normal)
+        someButton.addTarget(self, action: #selector(handleFavorite), for: .touchUpInside)
+        return someButton
+    }()
     
     func setupConstraints() {
-        setupNameConstraints()
-        setupButtonFavConstraints()
-    }
-    func configureName() {
-        name.adjustsFontSizeToFitWidth = true
-        name.numberOfLines = 1
-    }
-    func configureButtonFav() {
-        buttonFav.setTitle("UIButton", for: .normal)
-        buttonFav.setImage(UIImage.fav, for: .normal)
-        buttonFav.tintColor = .red
-        buttonFav.addTarget(self, action: #selector(handleFavorite), for: .touchUpInside)
-        
-    }
-    
-    func setupNameConstraints() {
-//        name.frame = CGRect(x: 0, y: 0, width: 50, height: 50)
-        name.translatesAutoresizingMaskIntoConstraints                 = false
-        name.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
-        name.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 40)
-            .isActive = true
-        name.heightAnchor.constraint(equalToConstant: 80).isActive = true
-    }
-    
-    func setupButtonFavConstraints() {
-        buttonFav.translatesAutoresizingMaskIntoConstraints = false
-        buttonFav.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
-        buttonFav.leadingAnchor.constraint(equalTo: name.trailingAnchor, constant: 40).isActive = true
-        buttonFav.trailingAnchor.constraint(equalTo: trailingAnchor,constant: -30).isActive = true
-        buttonFav.heightAnchor.constraint(equalToConstant: 50).isActive = true
-        buttonFav.widthAnchor.constraint(equalToConstant: 50).isActive = true
+        NSLayoutConstraint.activate([
+            contentView.heightAnchor.constraint(greaterThanOrEqualToConstant: 50),
+            name.centerYAnchor.constraint(equalTo: centerYAnchor,constant: 0),
+            name.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 40),
+            buttonFav.centerYAnchor.constraint(equalTo: centerYAnchor),
+            buttonFav.leadingAnchor.constraint(equalTo: name.trailingAnchor, constant: 40),
+            buttonFav.trailingAnchor.constraint(equalTo: trailingAnchor,constant: -30),
+            buttonFav.heightAnchor.constraint(equalToConstant: 30),
+            buttonFav.widthAnchor.constraint(equalToConstant: 30)
+        ])
     }
 }
